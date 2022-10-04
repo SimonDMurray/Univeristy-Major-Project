@@ -1,0 +1,110 @@
+
+```{r}
+library(Seurat)
+library(Matrix)
+```
+
+```{r}
+# Setting work directory so that reading data is relative to this notebook
+wd <- setwd(".")
+```
+
+```{r}
+# Data should be generated into a subdirectory called data by get-data.sh, each type of data is stored within a subdirectory of data
+ADT_data <- Read10X(paste(wd, "data/ADT", sep="/"))
+```
+
+```{r}
+# Chosen to filter using notebook guidance of 3 cells and 200 features to remove empty cells and non-signficant genes
+ADT_seurat <- CreateSeuratObject(ADT_data, project = "pbmc-ADT", min.cells = 3, min.features = 200)
+```
+
+```{r}
+# Calcualte Mitochondria percentage in each cell
+ADT_seurat[["percent.mt"]] <- PercentageFeatureSet(ADT_seurat, pattern = "^MT-")
+```
+
+```{r}
+# Removing cells that are high in mitochondrial ADT as those cells are likely lysed and dead
+# Removing genes present in too many cells as those won't be potential marker genes
+# Removing genes not present in enough cells as those won't be marker genes for a cell type (this is a risk as sometimes very rare cell types only have a few cells collected so could be losing information here, it is done for reducing size of object)
+ADT_seurat <- subset(ADT_seurat, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+```
+
+```{r}
+# Normalising gex expression data so that the expression of genes between cells can be adequately compared, using default method and scaling factor, number of genes is set to 2000 for calculation.
+ADT_seurat <- NormalizeData(ADT_seurat)
+```
+
+```{r}
+# To find the genes that are hihgly variable in their expression between cells, the FindVariableFeatures is used. Default is to use a selection method that fits varianace and mean relationship using local regression
+ADT_seurat <- FindVariableFeatures(ADT_seurat)
+```
+
+
+```{r}
+# In a Seurat Object, the row names are the genes and the column names are the cells. Scaling the data makes each expression value larger for comparison while removing the dominance of highly expressed genes. Scaling data requires a list of genes and a Seurat object. 
+genes <- rownames(ADT_seurat)
+ADT_seurat <- ScaleData(ADT_seurat, features = genes)
+```
+
+```{r}
+# Dimensionality reduction reduces the high levels of variability between cells into comparative vectorised space where each cells position in space is representative of its values across all variables
+ADT_seurat <- RunPCA(ADT_seurat, features = VariableFeatures(object = ADT_seurat))
+```
+
+```{r}
+# Dimensionality reduction combines as much variance as possible into principal components. Each principle component in turn should contain the maximum possible variance it can. An elbow plot visaulises how much variance each principle component contains.
+ElbowPlot(ADT_seurat)
+```
+
+# Looking at this graph, the sudden drop in standard deviation comes in the 5th principle component. This shows that the first 5 dimensions in reduced space contain most of the variance and should be used to build the nearest neighbour graph
+
+```{r}
+# Before clustering can be ran, a nearest neighbour graph needs to be built for the clustering to work on. This connects each cell together in a network. The first four dimensions are being used to build the neighbourhood graph after inspecting elbow plot.
+ADT_seurat <- FindNeighbors(ADT_seurat, dims = 1:5)
+```
+
+```{r}
+# Matrix market files are a filetype type that stores a nearest neighbour graph as a matrix. This needs to be extracted from the Seurat object to be used as the input for MCL
+nn_matrix <- as(ADT_seurat@graphs$RNA_nn, "dgCMatrix")
+```
+
+```{r}
+# Need to create a directory for matrix market file to be saved to
+dir.create(file.path(wd, "nn_matrices", "ADT"), recursive = TRUE)
+```
+
+```{r}
+# Writing matrix market file to system for MCL analysis
+writeMM(nn_matrix, paste(wd, "nn_matrices/ADT", "nn.mtx", sep="/"))
+```
+
+```{r}
+# Clustering data, by default Seurat uses Louvain so have to specify Leiden which is algorithm 4, using default resolution of 0.8 which is used to gauge how fine or coarse the clusters should be
+
+# Have to use igraph method as default method crashes due to size of data (as weakness of leiden)
+ADT_seurat <- FindClusters(ADT_seurat, algorithm = 4, method = "igraph")
+```
+
+```{r}
+# After clustering the data, it needs to be embedded. This can be done with multiple dimensionality reduction algorithms, UMAP is preferred because it is non-linear dimensional reduction method so it does not take each principal component in an order where each component's max variation is based on the variation already factored in by the previous principal component. UMAP can only be run after PCA has already been run however.
+ADT_seurat <- RunUMAP(ADT_seurat, dims = 1:5)
+```
+
+```{r}
+# Visualisation the Clustering
+DimPlot(ADT_seurat, reduction = "umap")
+```
+
+```{r}
+# Saving teh seurat object so it can easily be read in for future analysis
+dir.create(file.path(wd, "seurat_objects", "ADT"), recursive = TRUE)
+saveRDS(ADT_seurat, paste(wd, "seurat_objects/ADT", "seurat.rds", sep="/"))
+```
+
+```{r}
+# Saving the environment so entire notebook can be loaded back up quickly
+save.image(paste(wd, "seurat_objects/ADT", "seurat.rdata", sep="/"))
+```
+
