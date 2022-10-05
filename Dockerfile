@@ -3,7 +3,7 @@ FROM rocker/r-ver:4.0.4
 
 # Need it to install some basic OS packages in order to other packages to work
 RUN apt-get update && apt-get install -y liblzma-dev libbz2-dev zlib1g libpng-dev libxml2-dev \
-        gfortran-7 libglpk-dev libhdf5-dev libcurl4-openssl-dev python3.8 python3-dev python3-pip
+        gfortran-7 libglpk-dev libhdf5-dev libcurl4-openssl-dev python3.8 python3-dev python3-pip wget
 
 # Need to install specific pacakges for UMAP and leiden to allow them to work within Seurat 
 RUN pip3 install numpy==1.20.1 umap-learn leidenalg igraph anndata regex
