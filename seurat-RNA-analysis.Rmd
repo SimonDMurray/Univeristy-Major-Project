@@ -4,6 +4,8 @@ library(Seurat)
 library(Matrix)
 ```
 
+# Seurat tutorial: https://satijalab.org/seurat/articles/pbmc3k_tutorial.html
+
 ```{r}
 # Setting work directory so that reading data is relative to this notebook
 wd <- setwd(".")
@@ -20,7 +22,7 @@ RNA_seurat <- CreateSeuratObject(RNA_data, project = "pbmc-RNA", min.cells = 3, 
 ```
 
 ```{r}
-# Calcualte Mitochondria percentage in each cell
+# Calcualte mitochondrial rna percentage in each cell
 RNA_seurat[["percent.mt"]] <- PercentageFeatureSet(RNA_seurat, pattern = "^MT-")
 ```
 
@@ -37,13 +39,12 @@ RNA_seurat <- NormalizeData(RNA_seurat)
 ```
 
 ```{r}
-# To find the genes that are hihgly variable in their expression between cells, the FindVariableFeatures is used. Default is to use a selection method that fits varianace and mean relationship using local regression
+# To find the genes that are highly variable in their expression between cells, FindVariableFeatures is used. Default is to use a selection method that fits variance and mean relationship using local regression
 RNA_seurat <- FindVariableFeatures(RNA_seurat)
 ```
 
-
 ```{r}
-# In a Seurat Object, the row names are the genes and the column names are the cells. Scaling the data makes each expression value larger for comparison while removing the dominance of highly expressed genes. Scaling data requires a list of genes and a Seurat object. 
+# In a seurat object, the row names are the genes and the column names are the cells. Scaling the data makes each expression value larger for comparison while removing the dominance of highly expressed genes. Scaling data requires a list of genes. 
 genes <- rownames(RNA_seurat)
 RNA_seurat <- ScaleData(RNA_seurat, features = genes)
 ```
@@ -54,11 +55,11 @@ RNA_seurat <- RunPCA(RNA_seurat, features = VariableFeatures(object = RNA_seurat
 ```
 
 ```{r}
-# Dimensionality reduction combines as much variance as possible into principal components. Each principle component in turn should contain the maximum possible variance it can. An elbow plot visaulises how much variance each principle component contains.
+# Dimensionality reduction combines as much variance as possible into principal components. Each principal component in turn should contain the maximum possible variance it can. An elbow plot visualises how much variance each principal component contains.
 ElbowPlot(RNA_seurat)
 ```
 
-# Looking at this graph, the sudden drop in standard deviation comes in the 4th principle component. This shows that the first 4 dimensions in reduced space contain most of the variance and should be used to build the nearest neighbour graph
+# Looking at this graph, the sudden drop in standard deviation comes in the 4th principal component. This shows that the first 4 dimensions in reduced space contain most of the variance and should be used to build the nearest neighbour graph
 
 ```{r}
 # Before clustering can be ran, a nearest neighbour graph needs to be built for the clustering to work on. This connects each cell together in a network. The first four dimensions are being used to build the neighbourhood graph after inspecting elbow plot.
@@ -66,7 +67,7 @@ RNA_seurat <- FindNeighbors(RNA_seurat, dims = 1:4)
 ```
 
 ```{r}
-# Matrix market files are a filetype type that stores a nearest neighbour graph as a matrix. This needs to be extracted from the Seurat object to be used as the input for MCL
+# Matrix market files are a filetype type that stores a nearest neighbour graph as a matrix. This needs to be extracted from the seurat object to be used as the input for MCL
 nn_matrix <- as(RNA_seurat@graphs$RNA_nn, "dgCMatrix")
 ```
 
@@ -81,24 +82,30 @@ writeMM(nn_matrix, paste(wd, "nn_matrices/RNA", "nn.mtx", sep="/"))
 ```
 
 ```{r}
-# Clustering data, by default Seurat uses Louvain so have to specify Leiden which is algorithm 4, using default resolution of 0.8 which is used to gauge how fine or coarse the clusters should be
+# Clustering data by default Seurat uses Louvain so have to specify Leiden which is algorithm 4, using default resolution of 0.8 which is used to gauge how fine or coarse the clusters should be
 
 # Have to use igraph method on ADT data so will also use it here
 RNA_seurat <- FindClusters(RNA_seurat, algorithm = 4, method = "igraph")
 ```
 
 ```{r}
-# After clustering the data, it needs to be embedded. This can be done with multiple dimensionality reduction algorithms, UMAP is preferred because it is non-linear dimensional reduction method so it does not take each principal component in an order where each component's max variation is based on the variation already factored in by the previous principal component. UMAP can only be run after PCA has already been run however.
+#Saving leiden clustering to file for later comparison with MCL
+dir.create(file.path(wd, "cls_lei", "RNA"), recursive = TRUE)
+write.table(RNA_seurat@active.ident, file="cls_lei/RNA/lei_r08", row.names=TRUE, col.names=FALSE, sep="\t", quote = FALSE)
+```
+
+```{r}
+# After clustering the data, it needs to be embedded. This can be done with multiple dimensionality reduction algorithms, UMAP is preferred because it is non-linear dimensional reduction method so it does not take each principal component in an order where each component's max variation is based on the variation already factored in by the previous principal component. UMAP can only be run after PCA.
 RNA_seurat <- RunUMAP(RNA_seurat, dims = 1:4)
 ```
 
 ```{r}
-# Visualisation the Clustering
+# Visualisation of the clustering
 DimPlot(RNA_seurat, reduction = "umap")
 ```
 
 ```{r}
-# Saving teh seurat object so it can easily be read in for future analysis
+# Saving the seurat object so it can easily be read in for future analysis
 dir.create(file.path(wd, "seurat_objects", "RNA"), recursive = TRUE)
 saveRDS(RNA_seurat, paste(wd, "seurat_objects/RNA", "seurat.rds", sep="/"))
 ```

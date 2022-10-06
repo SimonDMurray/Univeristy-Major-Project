@@ -4,6 +4,8 @@ library(Seurat)
 library(Matrix)
 ```
 
+# Seurat tutorial: https://satijalab.org/seurat/articles/pbmc3k_tutorial.html
+
 ```{r}
 # Setting work directory so that reading data is relative to this notebook
 wd <- setwd(".")
@@ -20,12 +22,12 @@ ADT_seurat <- CreateSeuratObject(ADT_data, project = "pbmc-ADT", min.cells = 3, 
 ```
 
 ```{r}
-# Calcualte Mitochondria percentage in each cell
+# Calcualte mitochondrial RNA percentage in each cell
 ADT_seurat[["percent.mt"]] <- PercentageFeatureSet(ADT_seurat, pattern = "^MT-")
 ```
 
 ```{r}
-# Removing cells that are high in mitochondrial ADT as those cells are likely lysed and dead
+# Removing cells that are high in mitochondrial RNA as those cells are likely lysed and dead
 # Removing genes present in too many cells as those won't be potential marker genes
 # Removing genes not present in enough cells as those won't be marker genes for a cell type (this is a risk as sometimes very rare cell types only have a few cells collected so could be losing information here, it is done for reducing size of object)
 ADT_seurat <- subset(ADT_seurat, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
@@ -37,13 +39,13 @@ ADT_seurat <- NormalizeData(ADT_seurat)
 ```
 
 ```{r}
-# To find the genes that are hihgly variable in their expression between cells, the FindVariableFeatures is used. Default is to use a selection method that fits varianace and mean relationship using local regression
+# To find the genes that are hihgly variable in their expression between cells, FindVariableFeatures is used. Default is to use a selection method that fits variance and mean relationship using local regression
 ADT_seurat <- FindVariableFeatures(ADT_seurat)
 ```
 
 
 ```{r}
-# In a Seurat Object, the row names are the genes and the column names are the cells. Scaling the data makes each expression value larger for comparison while removing the dominance of highly expressed genes. Scaling data requires a list of genes and a Seurat object. 
+# In a seurat object, the row names are the genes and the column names are the cells. Scaling the data makes each expression value larger for comparison while removing the dominance of highly expressed genes. Scaling data requires a list of genes. 
 genes <- rownames(ADT_seurat)
 ADT_seurat <- ScaleData(ADT_seurat, features = genes)
 ```
@@ -54,19 +56,19 @@ ADT_seurat <- RunPCA(ADT_seurat, features = VariableFeatures(object = ADT_seurat
 ```
 
 ```{r}
-# Dimensionality reduction combines as much variance as possible into principal components. Each principle component in turn should contain the maximum possible variance it can. An elbow plot visaulises how much variance each principle component contains.
+# Dimensionality reduction combines as much variance as possible into principal components. Each principal component in turn should contain the maximum possible variance it can. An elbow plot visualises how much variance each principal component contains.
 ElbowPlot(ADT_seurat)
 ```
 
-# Looking at this graph, the sudden drop in standard deviation comes in the 5th principle component. This shows that the first 5 dimensions in reduced space contain most of the variance and should be used to build the nearest neighbour graph
+# Looking at this graph, the sudden drop in standard deviation comes in the 5th principal component. This shows that the first 5 dimensions in reduced space contain most of the variance and should be used to build the nearest neighbour graph
 
 ```{r}
-# Before clustering can be ran, a nearest neighbour graph needs to be built for the clustering to work on. This connects each cell together in a network. The first four dimensions are being used to build the neighbourhood graph after inspecting elbow plot.
+# Before clustering can be ran, a nearest neighbour graph needs to be built for the clustering to work on. This connects each cell together in a network. The first five dimensions are being used to build the neighbourhood graph after inspecting elbow plot.
 ADT_seurat <- FindNeighbors(ADT_seurat, dims = 1:5)
 ```
 
 ```{r}
-# Matrix market files are a filetype type that stores a nearest neighbour graph as a matrix. This needs to be extracted from the Seurat object to be used as the input for MCL
+# Matrix market files are a filetype type that stores a nearest neighbour graph as a matrix. This needs to be extracted from the seurat object to be used as the input for MCL
 nn_matrix <- as(ADT_seurat@graphs$RNA_nn, "dgCMatrix")
 ```
 
@@ -81,24 +83,30 @@ writeMM(nn_matrix, paste(wd, "nn_matrices/ADT", "nn.mtx", sep="/"))
 ```
 
 ```{r}
-# Clustering data, by default Seurat uses Louvain so have to specify Leiden which is algorithm 4, using default resolution of 0.8 which is used to gauge how fine or coarse the clusters should be
+# Clustering data by default seurat uses Louvain so have to specify Leiden which is algorithm 4, using default resolution of 0.8 which is used to gauge how fine or coarse the clusters should be
 
-# Have to use igraph method as default method crashes due to size of data (as weakness of leiden)
+# Have to use igraph method as default method crashes due to size of data (a weakness of leiden)
 ADT_seurat <- FindClusters(ADT_seurat, algorithm = 4, method = "igraph")
 ```
 
 ```{r}
-# After clustering the data, it needs to be embedded. This can be done with multiple dimensionality reduction algorithms, UMAP is preferred because it is non-linear dimensional reduction method so it does not take each principal component in an order where each component's max variation is based on the variation already factored in by the previous principal component. UMAP can only be run after PCA has already been run however.
+#Saving leiden clustering to file for later comparison with MCL
+dir.create(file.path(wd, "cls_lei", "ADT"), recursive = TRUE)
+write.table(ADT_seurat@active.ident, file="cls_lei/ADT/lei_r08", row.names=TRUE, col.names=FALSE, sep="\t", quote = FALSE)
+```
+
+```{r}
+# After clustering the data, it needs to be embedded. This can be done with multiple dimensionality reduction algorithms, UMAP is preferred because it is non-linear dimensional reduction method so it does not take each principal component in an order where each component's max variation is based on the variation already factored in by the previous principal component. UMAP can only be run after PCA.
 ADT_seurat <- RunUMAP(ADT_seurat, dims = 1:5)
 ```
 
 ```{r}
-# Visualisation the Clustering
+# Visualisation of the clustering
 DimPlot(ADT_seurat, reduction = "umap")
 ```
 
 ```{r}
-# Saving teh seurat object so it can easily be read in for future analysis
+# Saving the seurat object so it can easily be read in for future analysis
 dir.create(file.path(wd, "seurat_objects", "ADT"), recursive = TRUE)
 saveRDS(ADT_seurat, paste(wd, "seurat_objects/ADT", "seurat.rds", sep="/"))
 ```
