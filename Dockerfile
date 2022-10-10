@@ -21,15 +21,21 @@ RUN Rscript -e "install.packages(c('hdf5r','dimRed','png','ggplot2','reticulate'
 RUN Rscript -e "devtools::install_github('mojaveazure/seurat-disk')"
 
 # Installing MCL/RCL
-
+# Need to clone repository in order to get some additional scripts not in the source download
 RUN cd /opt && \
     git clone https://github.com/micans/mcl.git && \
     cd mcl && \
-    chmod u+x build-mcl-21-257.sh && \
-    ./build-mcl-21-257.sh 
+    chmod u+x install-this-mcl.sh && \
+    ./install-this-mcl.sh
+
+# Need to re-organise mcl directory to contain additional scripts not in source download and remove unecessary files from repository in container
+RUN mv /opt/mcl/rcl/srt2tab.sh /opt/mcl/mcl-22-282/rcl && \
+    mv /opt/mcl/rcl/srt2cls.sh /opt/mcl/mcl-22-282/rcl && \
+    mv /opt/mcl/mcl-22-282 /opt && \
+    rm -rf /opt/mcl
 
 # Add MCL and associated tools to PATH
-ENV PATH="${PATH}:/opt/mcl/mcl-21-257/src/shcl:/opt/mcl/mcl-21-257/src/shmcl:/opt/mcl/mcl-21-257/src/shmcx:/opt/mcl/mcl-21-257/src/shmcxquery:/opt/mcl/mcl-21-257/src/shmx:/opt/mcl/rcl" 
+ENV PATH="${PATH}:/opt/mcl-22-282/src/shcl:/opt/mcl-22-282/src/shmcl:/opt/mcl-22-282/src/shmcx:/opt/mcl-22-282/src/shmcxquery:/opt/mcl-22-282/src/shmx:/opt/mcl-22-282/rcl"
 
 # Specify docker container to start in bash rather than R
 ENTRYPOINT ["bash"]
