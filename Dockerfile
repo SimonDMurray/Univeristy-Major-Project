@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y liblzma-dev libbz2-dev zlib1g libpng-de
 RUN pip3 install numpy==1.20.1 umap-learn leidenalg igraph anndata regex
 
 
-# Installing the pacakges needed for downstream analysis in R, due to some packages being dependencings of others the order they are installed in matters
+# Installing the packages needed for downstream analysis in R, due to some packages being dependencings of others the order they are installed in matters
 RUN Rscript -e "install.packages(c('BiocManager', 'devtools', 'R.utils', 'reticulate', 'processx'))"
 RUN Rscript -e "BiocManager::install(c('Rhtslib', 'LoomExperiment', 'SingleCellExperiment'))"
 
