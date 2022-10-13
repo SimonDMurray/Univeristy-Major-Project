@@ -3,19 +3,30 @@
 set -euo pipefail
 
 ## Organising work directory for MCL
-mkdir -p mcl_work/ADT
-cp nn_matrices/ADT/nn.mtx mcl_work/ADT
-cp data/ADT/barcodes.tsv.gz mcl_work/ADT
-cp data/ADT/features.tsv.gz mcl_work/ADT/features.tsv.gz
-cd mcl_work/ADT
-gunzip *.gz
-mv features.tsv genes.txt
+cd ADT_seurat_analysis_output/barcode_files
 ## Converting barcodes file to expected format for MCL
-srt2tab.sh barcodes.tsv > cells.tab
+srt2tab.sh filtered_barcodes.txt > cells.tab
+mkdir -p ../../ADT_mcl_work
+cd ../../ADT_mcl_work
 ## MCXload generates a network in expected formated for MCL from a matrix market file
-tail -n +3 nn.mtx | mcxload -123 -  -ri max --write-binary -o nn.mcx
+mkdir -p mcl_nn
+tail -n +3 ../ADT_seurat_analysis_output/nn_matrix/nn.mtx | mcxload -123 -  -ri max --write-binary -o mcl_nn/nn.mcx
 ## Create MCL output directory
-cd ../..
-mkdir -p cls_mcl/ADT
+mkdir -p cls_mcl
 ## Running MCL clustering using 30 CPUs and an inflation value of 1.4 (equivalent to 0.8 resolution)
-rcl mcl cls_mcl/ADT -p 30 -n mcl_work/ADT/nn.mcx -t mcl_work/ADT/cells.tab -I "1.4"
+rcl mcl cls_mcl -p 30 -n mcl_nn/nn.mcx -t ../ADT_seurat_analysis_output/barcode_files/cells.tab -I "1.4"
+mkdir -p lei_conversion
+cd lei_conversion
+# Converting leiden script requires leiden clustering to be in current working directory
+cp ../../ADT_seurat_analysis_output/cls_lei/lei_r08 .
+## Converting leiden clustering to rcl format for comparison
+srt2cls.sh lei_r08 ../../ADT_seurat_analysis_output/barcode_files/cells.tab
+rm lei_r08
+cd ..
+mkdir -p comparison
+clm vol -o comparison/out.ADT.vol cls_mcl/out.nn.mcx.I140 lei_conversion/lei_r08.cls
+## Can't compare ADT to RNA clusterings of the same algorithm as clm vol requires matrices to be the same size
+mkdir -p mcl_seurat_table
+cd mcl_seurat_table
+## Converting mcl clustering to table format to be integrated to Seurat object
+mcxdump -imx ../cls_mcl/out.nn.mcx.I140 -tabr ../../ADT_seurat_analysis_output/barcode_files/cells.tab --transpose --no-values -o ADT_srt_mcl.file
