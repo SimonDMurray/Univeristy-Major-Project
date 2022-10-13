@@ -50,6 +50,12 @@ RNA_seurat <- ScaleData(RNA_seurat, features = genes)
 ```
 
 ```{r}
+# Saving genes list to file
+dir.create(file.path(wd, "RNA_seurat_analysis_output", "gene_files"), recursive = TRUE)
+write.table(genes, file="RNA_seurat_analysis_output/gene_files/filtered_features.txt", row.names=FALSE, col.names=FALSE, sep="\t", quote = FALSE)
+```
+
+```{r}
 # Dimensionality reduction reduces the high levels of variability between cells into comparative vectorised space where each cells position in space is representative of its values across all variables
 RNA_seurat <- RunPCA(RNA_seurat, features = VariableFeatures(object = RNA_seurat))
 ```
@@ -68,17 +74,17 @@ RNA_seurat <- FindNeighbors(RNA_seurat, dims = 1:4)
 
 ```{r}
 # Matrix market files are a filetype type that stores a nearest neighbour graph as a matrix. This needs to be extracted from the seurat object to be used as the input for MCL
-nn_matrix <- as(RNA_seurat@graphs$RNA_nn, "dgCMatrix")
+nn_matrix <- as(RNA_seurat@graphs$RNA_snn, "dgCMatrix")
 ```
 
 ```{r}
 # Need to create a directory for matrix market file to be saved to
-dir.create(file.path(wd, "nn_matrices", "RNA"), recursive = TRUE)
+dir.create(file.path(wd, "RNA_seurat_analysis_output", "nn_matrix"), recursive = TRUE)
 ```
 
 ```{r}
 # Writing matrix market file to system for MCL analysis
-writeMM(nn_matrix, paste(wd, "nn_matrices/RNA", "nn.mtx", sep="/"))
+writeMM(nn_matrix, paste(wd, "RNA_seurat_analysis_output/nn_matrix", "nn.mtx", sep="/"))
 ```
 
 ```{r}
@@ -90,8 +96,8 @@ RNA_seurat <- FindClusters(RNA_seurat, algorithm = 4, method = "igraph")
 
 ```{r}
 #Saving leiden clustering to file for later comparison with MCL
-dir.create(file.path(wd, "cls_lei", "RNA"), recursive = TRUE)
-write.table(RNA_seurat@active.ident, file="cls_lei/RNA/lei_r08", row.names=TRUE, col.names=FALSE, sep="\t", quote = FALSE)
+dir.create(file.path(wd, "RNA_seurat_analysis_output", "cls_lei"), recursive = TRUE)
+write.table(RNA_seurat@active.ident, file="RNA_seurat_analysis_output/cls_lei/lei_r08", row.names=TRUE, col.names=FALSE, sep="\t", quote = FALSE)
 ```
 
 ```{r}
@@ -105,13 +111,20 @@ DimPlot(RNA_seurat, reduction = "umap")
 ```
 
 ```{r}
+# Saving barcodes to file
+barcodes <- colnames(RNA_seurat)
+dir.create(file.path(wd, "RNA_seurat_analysis_output", "barcode_files"), recursive = TRUE)
+write.table(barcodes, file="RNA_seurat_analysis_output/barcode_files/filtered_barcodes.txt", row.names=FALSE, col.names=FALSE, sep="\t", quote = FALSE)
+```
+
+```{r}
 # Saving the seurat object so it can easily be read in for future analysis
-dir.create(file.path(wd, "seurat_objects", "RNA"), recursive = TRUE)
-saveRDS(RNA_seurat, paste(wd, "seurat_objects/RNA", "seurat.rds", sep="/"))
+dir.create(file.path(wd, "RNA_seurat_analysis_output", "seurat_objects"), recursive = TRUE)
+saveRDS(RNA_seurat, paste(wd, "RNA_seurat_analysis_output/seurat_objects", "seurat.rds", sep="/"))
 ```
 
 ```{r}
 # Saving the environment so entire notebook can be loaded back up quickly
-save.image(paste(wd, "seurat_objects/RNA", "seurat.rdata", sep="/"))
+save.image(paste(wd, "RNA_seurat_analysis_output/seurat_objects", "seurat.rdata", sep="/"))
 ```
 

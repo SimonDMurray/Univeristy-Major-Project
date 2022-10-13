@@ -39,15 +39,20 @@ ADT_seurat <- NormalizeData(ADT_seurat)
 ```
 
 ```{r}
-# To find the genes that are hihgly variable in their expression between cells, FindVariableFeatures is used. Default is to use a selection method that fits variance and mean relationship using local regression
+# To find the genes that are highly variable in their expression between cells, FindVariableFeatures is used. Default is to use a selection method that fits variance and mean relationship using local regression
 ADT_seurat <- FindVariableFeatures(ADT_seurat)
 ```
-
 
 ```{r}
 # In a seurat object, the row names are the genes and the column names are the cells. Scaling the data makes each expression value larger for comparison while removing the dominance of highly expressed genes. Scaling data requires a list of genes. 
 genes <- rownames(ADT_seurat)
 ADT_seurat <- ScaleData(ADT_seurat, features = genes)
+```
+
+```{r}
+# Saving genes list to file
+dir.create(file.path(wd, "ADT_seurat_analysis_output", "gene_files"), recursive = TRUE)
+write.table(genes, file="ADT_seurat_analysis_output/gene_files/filtered_features.txt", row.names=FALSE, col.names=FALSE, sep="\t", quote = FALSE)
 ```
 
 ```{r}
@@ -69,17 +74,17 @@ ADT_seurat <- FindNeighbors(ADT_seurat, dims = 1:5)
 
 ```{r}
 # Matrix market files are a filetype type that stores a nearest neighbour graph as a matrix. This needs to be extracted from the seurat object to be used as the input for MCL
-nn_matrix <- as(ADT_seurat@graphs$RNA_nn, "dgCMatrix")
+nn_matrix <- as(ADT_seurat@graphs$RNA_snn, "dgCMatrix")
 ```
 
 ```{r}
 # Need to create a directory for matrix market file to be saved to
-dir.create(file.path(wd, "nn_matrices", "ADT"), recursive = TRUE)
+dir.create(file.path(wd, "ADT_seurat_analysis_output", "nn_matrix"), recursive = TRUE)
 ```
 
 ```{r}
 # Writing matrix market file to system for MCL analysis
-writeMM(nn_matrix, paste(wd, "nn_matrices/ADT", "nn.mtx", sep="/"))
+writeMM(nn_matrix, paste(wd, "ADT_seurat_analysis_output/nn_matrix", "nn.mtx", sep="/"))
 ```
 
 ```{r}
@@ -91,8 +96,8 @@ ADT_seurat <- FindClusters(ADT_seurat, algorithm = 4, method = "igraph")
 
 ```{r}
 #Saving leiden clustering to file for later comparison with MCL
-dir.create(file.path(wd, "cls_lei", "ADT"), recursive = TRUE)
-write.table(ADT_seurat@active.ident, file="cls_lei/ADT/lei_r08", row.names=TRUE, col.names=FALSE, sep="\t", quote = FALSE)
+dir.create(file.path(wd, "ADT_seurat_analysis_output", "cls_lei"), recursive = TRUE)
+write.table(ADT_seurat@active.ident, file="ADT_seurat_analysis_output/cls_lei/lei_r08", row.names=TRUE, col.names=FALSE, sep="\t", quote = FALSE)
 ```
 
 ```{r}
@@ -106,13 +111,20 @@ DimPlot(ADT_seurat, reduction = "umap")
 ```
 
 ```{r}
+# Saving barcodes to file
+barcodes <- colnames(ADT_seurat)
+dir.create(file.path(wd, "ADT_seurat_analysis_output", "barcode_files"), recursive = TRUE)
+write.table(barcodes, file="ADT_seurat_analysis_output/barcode_files/filtered_barcodes.txt", row.names=FALSE, col.names=FALSE, sep="\t", quote = FALSE)
+```
+
+```{r}
 # Saving the seurat object so it can easily be read in for future analysis
-dir.create(file.path(wd, "seurat_objects", "ADT"), recursive = TRUE)
-saveRDS(ADT_seurat, paste(wd, "seurat_objects/ADT", "seurat.rds", sep="/"))
+dir.create(file.path(wd, "ADT_seurat_analysis_output", "seurat_objects"), recursive = TRUE)
+saveRDS(ADT_seurat, paste(wd, "ADT_seurat_analysis_output/seurat_objects", "seurat.rds", sep="/"))
 ```
 
 ```{r}
 # Saving the environment so entire notebook can be loaded back up quickly
-save.image(paste(wd, "seurat_objects/ADT", "seurat.rdata", sep="/"))
+save.image(paste(wd, "ADT_seurat_analysis_output/seurat_objects", "seurat.rdata", sep="/"))
 ```
 
