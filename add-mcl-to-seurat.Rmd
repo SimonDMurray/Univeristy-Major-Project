@@ -36,11 +36,11 @@ ADT_seurat@meta.data$MCL_clustering <- ADT_mcl_df$MCL_clustering
 ```
 
 ```{r}
-DimPlot(ADT_seurat, reduction = "umap", label = ADT_seurat@meta.data$MCL_clustering)
+DimPlot(ADT_seurat, reduction = "umap", group.by = "MCL_clustering") + NoLegend()
 ```
 
 ```{r}
-DimPlot(ADT_seurat, reduction = "umap", label = ADT_seurat@meta.data$seurat_clusters)
+DimPlot(ADT_seurat, reduction = "umap", group.by = "seurat_clusters") + NoLegend()
 ```
 
 ```{r}
@@ -70,9 +70,21 @@ RNA_seurat@meta.data$MCL_clustering <- RNA_mcl_df$MCL_clustering
 ```
 
 ```{r}
-DimPlot(RNA_seurat, reduction = "umap", label = RNA_seurat@meta.data$MCL_clustering)
+DimPlot(RNA_seurat, reduction = "umap", group.by = "MCL_clustering") + NoLegend()
 ```
 
 ```{r}
-DimPlot(RNA_seurat, reduction = "umap", label = RNA_seurat@meta.data$seurat_clusters)
+DimPlot(RNA_seurat, reduction = "umap", group.by = "seurat_clusters") + NoLegend()
+```
+
+```{r}
+# Saving the seurat object so it can easily be read in for future analysis
+dir.create(file.path(wd, "ADT_seurat_analysis_output", "mcl_integrated_seurat"), recursive = TRUE)
+saveRDS(ADT_seurat, paste(wd, "ADT_seurat_analysis_output/mcl_integrated_seurat", "seurat.rds", sep="/"))
+```
+
+```{r}
+# Saving the seurat object so it can easily be read in for future analysis
+dir.create(file.path(wd, "RNA_seurat_analysis_output", "mcl_integrated_seurat"), recursive = TRUE)
+saveRDS(RNA_seurat, paste(wd, "RNA_seurat_analysis_output/mcl_integrated_seurat", "seurat.rds", sep="/"))
 ```
