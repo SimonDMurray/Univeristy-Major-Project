@@ -30,3 +30,6 @@ mkdir -p mcl_seurat_table
 cd mcl_seurat_table
 ## Converting mcl clustering to table format to be integrated to Seurat object
 mcxdump -imx ../cls_mcl/out.nn.mcx.I140 -tabr ../../ADT_seurat_analysis_output/barcode_files/cells.tab --transpose --no-values -o ADT_srt_mcl.file
+## Converting volatility file to seurat readable format
+cd ../comparison
+mcxdump -imx out.ADT.vol -tabr ../../ADT_seurat_analysis_output/barcode_files/cells.tab -o vol.srt.file
