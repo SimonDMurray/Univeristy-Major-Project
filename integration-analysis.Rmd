@@ -1,0 +1,301 @@
+
+##### ADT DATA #####
+
+```{r}
+library(Seurat)
+library(Matrix)
+library(SeuratDisk)
+library(SeuratObject)
+```
+
+```{r}
+# Setting work directory so that reading data is relative to this notebook
+wd <- setwd(".")
+```
+
+```{r}
+# Reading in ADT object written to file by analysis notebook
+ADT_seurat <- readRDS(paste(wd, "ADT_seurat_analysis_output/seurat_objects", "seurat.rds", sep="/"))
+```
+
+### ADDING CELL TYPE ANNOTATION FROM REFERENCE DATASET
+
+```{r}
+#Get list of barcodes needed for subsetting later
+ADT_barcodes <- colnames(ADT_seurat)
+```
+
+```{r}
+#Load in reference seurat object containing cell type annotation data
+ref_srat <- LoadH5Seurat(paste(wd, "data/pbmc_multimodal.h5seurat", sep="/"))
+```
+
+```{r}
+#extract cell type annotation data into a dataframe
+celltype_df <- as.data.frame(ref_srat@meta.data[,"celltype.l1"])
+```
+
+```{r}
+#rename rows to be the cell barcodes and rename column to be appropriat
+rownames(celltype_df) <- rownames(ref_srat@meta.data)
+colnames(celltype_df) <- "celltype"
+```
+
+```{r}
+#filter celltype dataframe to only contain cells remaining from preprocessing in seurat object as reference seurat was not preprocessed
+ADT_filt_celltype_df <- subset(celltype_df, rownames(celltype_df) %in% ADT_barcodes)
+```
+
+```{r}
+#add cell type annotations to seurat
+ADT_seurat@meta.data$celltype <- ADT_filt_celltype_df$celltype
+```
+
+```{r}
+#plotting embedding with cell type annotation labels
+DimPlot(ADT_seurat, reduction = "umap", group.by = "celltype", label = TRUE) + NoLegend()
+```
+
+### Integrating MCL clustering data into Seurat
+
+```{r}
+#Read MCL clustering table
+ADT_mcl_table <- read.table(paste(wd, "ADT_mcl_work/mcl_seurat_table/ADT_srt_mcl.file", sep = "/"))
+```
+
+```{r}
+#calculate length of table
+ADT_mcl_len <- dim(ADT_mcl_table)[1]
+```
+
+```{r}
+#create dataframe containing only clusters and remove dummy line that MCL needs
+ADT_mcl_df <- as.data.frame(ADT_mcl_table$V2[2:ADT_mcl_len]) 
+```
+
+```{r}
+#rename rows to be the cell barcodes and rename column to be appropriate
+rownames(ADT_mcl_df) <- ADT_mcl_table$V1[2:ADT_mcl_len]
+colnames(ADT_mcl_df) <- "MCL_clustering"
+```
+
+```{r}
+#integrate mcl clustering to seurat object
+ADT_seurat@meta.data$MCL_clustering <- ADT_mcl_df$MCL_clustering
+```
+
+```{r}
+#plot full seurat object coloured by MCL clusters, legend has been removed as it is just arbitrary cluster numbers
+DimPlot(ADT_seurat, reduction = "umap", group.by = "MCL_clustering") + NoLegend()
+```
+
+```{r}
+#plot full seurat object coloured by Leiden clustersm legend has been removed as it is just arbitrary cluster numbers
+DimPlot(ADT_seurat, reduction = "umap", group.by = "seurat_clusters") + NoLegend()
+```
+
+### Testing subsetting seurat by MCL clusterings > specified number of nodes
+
+```{r}
+# Counts how many cells are in each MCL cluster
+ADT_cls_count <- as.data.frame(dplyr::count(ADT_seurat@meta.data, MCL_clustering))
+```
+
+```{r}
+# Filter out clusters with less than specified number of cells within
+ADT_cls_filt <- ADT_cls_count[ADT_cls_count$n >= 150,]
+```
+
+```{r}
+#filter seurat object to only have cells in clusters with >= 150 cells
+ADT_filt_srat <- subset(x = ADT_seurat, cells = rownames(subset(ADT_seurat@meta.data, MCL_clustering %in% ADT_cls_filt$MCL_clustering)))
+```
+
+```{r}
+#plot filtered seurat object coloured by MCL clusters, legend has been removed as it is just arbitrary cluster numbers
+DimPlot(ADT_filt_srat, reduction = "umap", group.by = "MCL_clustering") + NoLegend()
+```
+
+```{r}
+#plot filtered seurat object coloured by leiden clusters, legend has been removed as it is just arbitrary cluster numbers
+DimPlot(ADT_filt_srat, reduction = "umap", group.by = "seurat_clusters") + NoLegend()
+```
+
+#### TESTING VOLATILITY PLOTTING ####
+
+```{r}
+#Read volatility table
+ADT_vol_table <- read.table(paste(wd, "ADT_mcl_work/comparison/vol.srt.file", sep = "/"))
+```
+
+```{r}
+#calculate length of table
+ADT_vol_len <- dim(ADT_vol_table)[1]
+```
+
+```{r}
+#create dataframe containing only volatility scores and remove dummy line that MCL needs
+ADT_vol_df <- as.data.frame(ADT_vol_table$V3[2:ADT_vol_len])
+```
+
+```{r}
+#rename rows to be the cell barcodes and rename column to be appropriate
+rownames(ADT_vol_df) <- ADT_vol_table$V2[2:ADT_vol_len]
+colnames(ADT_vol_df) <- "Volatility"
+```
+
+```{r}
+#Integrate volatility scores into seurat object
+ADT_seurat@meta.data$Volatility <- ADT_vol_df$Volatility
+```
+
+```{r}
+#plot volatility where a lower score (red) represents a cell more likely to change clusters between algorithms
+FeaturePlot(ADT_seurat, features = "Volatility", label = FALSE, cols = c("red", "blue"))
+```
+
+```{r}
+# Saving the seurat object so it can easily be read in for future analysis
+dir.create(file.path(wd, "ADT_seurat_analysis_output", "integrated_seurat"), recursive = TRUE)
+saveRDS(ADT_seurat, paste(wd, "ADT_seurat_analysis_output/integrated_seurat", "full_seurat.rds", sep="/"))
+```
+
+####### RNA DATA ########
+
+```{r}
+# Setting work directory so that reading data is relative to this notebook
+wd <- setwd(".")
+```
+
+```{r}
+# Reading in ADT object written to file by analysis notebook
+RNA_seurat <- readRDS(paste(wd, "RNA_seurat_analysis_output/seurat_objects", "seurat.rds", sep="/"))
+```
+
+### ADDING CELL TYPE ANNOTATION FROM REFERENCE DATASET
+
+```{r}
+#Get list of barcodes needed for subsetting later
+RNA_barcodes <- colnames(RNA_seurat)
+```
+
+```{r}
+#filter celltype dataframe to only contain cells remaining from preprocessing in seurat object as reference seurat was not preprocessed
+RNA_filt_celltype_df <- subset(celltype_df, rownames(celltype_df) %in% RNA_barcodes)
+```
+
+```{r}
+#add cell type annotations to seurat
+RNA_seurat@meta.data$celltype <- RNA_filt_celltype_df$celltype
+```
+
+```{r}
+#plotting embedding with cell type annotation labels
+DimPlot(RNA_seurat, reduction = "umap", group.by = "celltype", label = TRUE) + NoLegend()
+```
+
+### Integrating MCL clustering data into Seurat
+
+```{r}
+#Read MCL clustering table
+RNA_mcl_table <- read.table(paste(wd, "RNA_mcl_work/mcl_seurat_table/RNA_srt_mcl.file", sep = "/"))
+```
+
+```{r}
+#calculate length of table
+RNA_mcl_len <- dim(RNA_mcl_table)[1]
+```
+
+```{r}
+#create dataframe containing only clusters and remove dummy line that MCL needs
+RNA_mcl_df <- as.data.frame(RNA_mcl_table$V2[2:RNA_mcl_len]) 
+```
+
+```{r}
+#rename rows to be the cell barcodes and rename column to be appropriate
+rownames(RNA_mcl_df) <- RNA_mcl_table$V1[2:RNA_mcl_len]
+colnames(RNA_mcl_df) <- "MCL_clustering"
+```
+
+```{r}
+#integrate mcl clustering to seurat object
+RNA_seurat@meta.data$MCL_clustering <- RNA_mcl_df$MCL_clustering
+```
+
+```{r}
+#plot full seurat object coloured by MCL clusters, legend has been removed as it is just arbitrary cluster numbers
+DimPlot(RNA_seurat, reduction = "umap", group.by = "MCL_clustering") + NoLegend()
+```
+
+```{r}
+#plot full seurat object coloured by Leiden clustersm legend has been removed as it is just arbitrary cluster numbers
+DimPlot(RNA_seurat, reduction = "umap", group.by = "seurat_clusters") + NoLegend()
+```
+
+### Testing subsetting seurat by MCL clusterings > specified number of nodes
+
+```{r}
+# Counts how many cells are in each MCL cluster
+RNA_cls_count <- as.data.frame(dplyr::count(RNA_seurat@meta.data, MCL_clustering))
+```
+
+```{r}
+# Filter out clusters with less than specified number of cells within
+## NOTE: 50 cells in RNA has similar number of clusters to 150 cells in ADT, meaning that ADT produced more finer clusters, 100 cells were used to ensure that some smaller clusters were lost but also not too many to make visualisation meaningless
+RNA_cls_filt <- RNA_cls_count[RNA_cls_count$n >= 100,]
+```
+
+```{r}
+#filter seurat object to only have cells in clusters with >= 100 cells
+RNA_filt_srat <- subset(x = RNA_seurat, cells = rownames(subset(RNA_seurat@meta.data, MCL_clustering %in% RNA_cls_filt$MCL_clustering)))
+```
+
+```{r}
+#plot filtered seurat object coloured by MCL clusters, legend has been removed as it is just arbitrary cluster numbers
+DimPlot(RNA_filt_srat, reduction = "umap", group.by = "MCL_clustering") + NoLegend()
+```
+
+```{r}
+#plot filtered seurat object coloured by leiden clusters, legend has been removed as it is just arbitrary cluster numbers
+DimPlot(RNA_filt_srat, reduction = "umap", group.by = "seurat_clusters") + NoLegend()
+```
+
+#### TESTING VOLATILITY PLOTTING ####
+
+```{r}
+#Read volatility table
+RNA_vol_table <- read.table(paste(wd, "RNA_mcl_work/comparison/vol.srt.file", sep = "/"))
+```
+
+```{r}
+#calculate length of table
+RNA_vol_len <- dim(RNA_vol_table)[1]
+```
+
+```{r}
+#create dataframe containing only volatility scores and remove dummy line that MCL needs
+RNA_vol_df <- as.data.frame(RNA_vol_table$V3[2:RNA_vol_len])
+```
+
+```{r}
+#rename rows to be the cell barcodes and rename column to be appropriate
+rownames(RNA_vol_df) <- RNA_vol_table$V2[2:RNA_vol_len]
+colnames(RNA_vol_df) <- "Volatility"
+```
+
+```{r}
+#Integrate volatility scores into seurat object
+RNA_seurat@meta.data$Volatility <- RNA_vol_df$Volatility
+```
+
+```{r}
+#plot volatility where a lower score (red) represents a cell more likely to change clusters between algorithms
+FeaturePlot(RNA_seurat, features = "Volatility", label = FALSE, cols = c("red", "blue"))
+```
+
+```{r}
+# Saving the seurat object so it can easily be read in for future analysis
+dir.create(file.path(wd, "RNA_seurat_analysis_output", "integrated_seurat"), recursive = TRUE)
+saveRDS(RNA_seurat, paste(wd, "RNA_seurat_analysis_output/integrated_seurat", "full_seurat.rds", sep="/"))
+```
+
