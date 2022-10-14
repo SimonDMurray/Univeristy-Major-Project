@@ -1,0 +1,36 @@
+
+```{r}
+# Need to load sceasy package for conversion
+library(sceasy)
+```
+
+```{r}
+# Set work dir so all work is relative for reproducibility
+wd <- setwd(".")
+```
+
+```{r}
+# Reading in RNA object written to file by integration analysis notebook
+RNA_seurat <- readRDS(paste(wd, "RNA_seurat_analysis_output/integrated_seurat", "full_seurat.rds", sep="/"))
+```
+
+```{r}
+# Reading in ADT object written to file by integration analysis notebook
+ADT_seurat <- readRDS(paste(wd, "ADT_seurat_analysis_output/integrated_seurat", "full_seurat.rds", sep="/"))
+```
+
+```{r}
+# Create output directory for h5ad files
+dir.create(file.path(wd, "RNA_seurat_analysis_output", "integrated_anndata"), recursive = TRUE)
+dir.create(file.path(wd, "ADT_seurat_analysis_output", "integrated_anndata"), recursive = TRUE)
+```
+
+```{r}
+# Converting RNA seurat to h5ad
+convertFormat(RNA_seurat, from = "seurat", to = "anndata", outFile = "RNA_seurat_analysis_output/integrated_anndata/RNA.h5ad")
+```
+
+```{r}
+# Converting ADT seurat to h5ad
+convertFormat(ADT_seurat, from = "seurat", to = "anndata", outFile = "ADT_seurat_analysis_output/integrated_anndata/ADT.h5ad")
+```
