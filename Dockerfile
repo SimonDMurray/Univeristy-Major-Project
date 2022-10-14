@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y liblzma-dev libbz2-dev zlib1g libpng-de
 # Need to install specific pacakges for UMAP and leiden to allow them to work within Seurat 
 RUN pip3 install numpy==1.20.1 umap-learn leidenalg igraph anndata regex cellxgene
 
-# Installing the pacakges needed for downstream analysis in R, due to some packages being dependencings of others the order they are installed in matters
+# Installing the packages needed for downstream analysis in R, due to some packages being dependencings of others the order they are installed in matters
 RUN Rscript -e "install.packages(c('BiocManager', 'devtools', 'R.utils', 'reticulate', 'processx'))"
 RUN Rscript -e "BiocManager::install(c('Rhtslib', 'LoomExperiment', 'SingleCellExperiment'))"
 
@@ -20,7 +20,7 @@ RUN Rscript -e "install.packages(c('hdf5r','dimRed','png','ggplot2','reticulate'
 RUN Rscript -e "devtools::install_github('mojaveazure/seurat-disk')"
 
 # Installing MCL/RCL
-# Need to clone repository in order to get some additional scripts not in the source download
+# Need to re-organise mcl directory to contain additional scripts not in source download and remove unecessary files from repository in container
 RUN cd /opt && \
     git clone https://github.com/micans/mcl.git && \
     cd mcl && \
@@ -34,7 +34,7 @@ RUN mv /opt/mcl/rcl/srt2tab.sh /opt/mcl/mcl-22-282/rcl && \
     rm -rf /opt/mcl
 
 # Add MCL and associated tools to PATH
-ENV PATH="${PATH}:/opt/mcl-22-282/src/shcl:/opt/mcl-22-282/src/shmcl:/opt/mcl-22-282/src/shmcx:/opt/mcl-22-282/src/shmcxquery:/opt/mcl-22-282/src/shmx:/opt/mcl-22-282/rcl" 
+ENV PATH="${PATH}:/opt/mcl-22-282/src/shcl:/opt/mcl-22-282/src/shmcl:/opt/mcl-22-282/src/shmcx:/opt/mcl-22-282/src/shmcxquery:/opt/mcl-22-282/src/shmx:/opt/mcl-22-282/rcl"
 
 # Specify docker container to start in bash rather than R
 ENTRYPOINT ["bash"]
