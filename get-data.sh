@@ -38,5 +38,12 @@ for file in *; do
 	mv $file ${file#GSM5008738_ADT_3P-}
 done
 
+cd ..
+
+# Downloading reference seurat object
+wget https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat
+
 # Removing TAR file
-rm data/GSE164378_RAW.tar
+rm GSE164378_RAW.tar
+
+
