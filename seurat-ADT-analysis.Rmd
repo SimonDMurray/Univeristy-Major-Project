@@ -90,7 +90,7 @@ writeMM(nn_matrix, paste(wd, "ADT_seurat_analysis_output/nn_matrix", "nn.mtx", s
 ```{r}
 # Clustering data by default seurat uses Louvain so have to specify Leiden which is algorithm 4, using resolution values of 0.1-2.0 which are used to gauge how fine or coarse the clusters should be
 
-dir.create(file.path(wd, "ADT_seurat_analysis_output", "cls_lei"), recursive = TRUE)
+dir.create(file.path(wd, "ADT_seurat_analysis_output", "cls_lei", "tables"), recursive = TRUE)
 
 # Have to use igraph method as default method crashes due to size of data (a weakness of leiden)
 
@@ -101,7 +101,7 @@ for (res in res_ls) {
     #print(outfile)
     write.table(ADT_seurat@active.ident, file=paste(wd, "ADT_seurat_analysis_output/cls_lei", outfile, sep = "/"), row.names=TRUE, col.names=FALSE, sep="\t", quote = FALSE)
     ADT_seurat[[outfile]] <- ADT_seurat[["seurat_clusters"]]
-    write.table(ADT_seurat@meta.data[[outfile]], file=paste(wd, "/ADT_seurat_analysis_output/cls_lei/", outfile, ".table", sep = ""), row.names=FALSE, col.names=FALSE, sep="\t", quote = FALSE)
+    write.table(ADT_seurat@meta.data[[outfile]], file=paste(wd, "/ADT_seurat_analysis_output/cls_lei/tables/", outfile, ".table", sep = ""), row.names=FALSE, col.names=FALSE, sep="\t", quote = FALSE)
 }
 ```
 
