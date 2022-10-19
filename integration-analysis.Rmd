@@ -102,8 +102,8 @@ ADT_seurat@meta.data$Volatility <- ADT_vol_df$Volatility
 
 ```{r}
 # Saving the seurat object so it can easily be read in for future analysis
-dir.create(file.path(wd, "ADT_seurat_analysis_output", "integrated_seurat"), recursive = TRUE)
-saveRDS(ADT_seurat, paste(wd, "ADT_seurat_analysis_output/integrated_seurat", "full_seurat.rds", sep="/"))
+dir.create(file.path(wd, "integrated_output", "integrated_seurat"), recursive = TRUE)
+saveRDS(ADT_seurat, paste(wd, "integrated_output/integrated_seurat", "full_ADT_seurat.rds", sep="/"))
 ```
 
 ### RNA DATA ###
@@ -180,11 +180,10 @@ RNA_seurat@meta.data$Volatility <- RNA_vol_df$Volatility
 
 ```{r}
 # Saving the seurat object so it can easily be read in for future analysis
-dir.create(file.path(wd, "RNA_seurat_analysis_output", "integrated_seurat"), recursive = TRUE)
-saveRDS(RNA_seurat, paste(wd, "RNA_seurat_analysis_output/integrated_seurat", "full_seurat.rds", sep="/"))
+saveRDS(RNA_seurat, paste(wd, "integrated_output/integrated_seurat", "full_RNA_seurat.rds", sep="/"))
 ```
 
 ```{r}
 # Saving the environment so entire notebook can be loaded back up quickly
-save.image(paste(wd, "integrated.rdata", sep="/"))
+save.image(paste(wd, "integrated_output/integrated.rdata", sep="/"))
 ```
