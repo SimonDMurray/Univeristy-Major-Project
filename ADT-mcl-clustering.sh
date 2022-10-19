@@ -14,7 +14,7 @@ tail -n +3 ../ADT_seurat_analysis_output/nn_matrix/nn.mtx | mcxload -123 -  -ri 
 ## Create MCL output directory
 mkdir -p cls_mcl
 ## Running MCL clustering using 30 CPUs and an inflation values of 1.1-4.0 (0.1-3.0 equivalent)
-rcl mcl cls_mcl -p 30 -n mcl_nn/nn.mcx -t ../ADT_seurat_analysis_output/barcode_files/cells.tab -I "1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 3.1 3.2 3.3 3.4 3.5 3.6 3.7 3.8 2.9 4.0"
+rcl mcl cls_mcl -p 30 -n mcl_nn/nn.mcx -t ../ADT_seurat_analysis_output/barcode_files/cells.tab -I "1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 3.1 3.2 3.3 3.4 3.5 3.6 3.7 3.8 3.9 4.0"
 mkdir -p lei_conversion
 cd lei_conversion
 # Converting leiden script requires leiden clustering to be in current working directory
