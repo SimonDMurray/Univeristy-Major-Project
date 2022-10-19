@@ -68,7 +68,7 @@ ElbowPlot(RNA_seurat)
 # Looking at this graph, the sudden drop in standard deviation comes in the 4th principal component. This shows that the first 4 dimensions in reduced space contain most of the variance and should be used to build the nearest neighbour graph
 
 ```{r}
-# Before clustering can be ran, a nearest neighbour graph needs to be built for the clustering to work on. This connects each cell together in a network. The first five dimensions are being used to build the neighbourhood graph after inspecting elbow plot.
+# Before clustering can be ran, a nearest neighbour graph needs to be built for the clustering to work on. This connects each cell together in a network. The first four dimensions are being used to build the neighbourhood graph after inspecting elbow plot.
 RNA_seurat <- FindNeighbors(RNA_seurat, dims = 1:4)
 ```
 
