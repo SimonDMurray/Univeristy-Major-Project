@@ -88,14 +88,20 @@ writeMM(nn_matrix, paste(wd, "ADT_seurat_analysis_output/nn_matrix", "nn.mtx", s
 ```
 
 ```{r}
+for (res in seq(from = 0.1, to = 4.0, by = 0.1)) {
+    print(res)
+}
+```
+
+
+```{r}
 # Clustering data by default seurat uses Louvain so have to specify Leiden which is algorithm 4, using resolution values of 0.1-3.0 which are used to gauge how fine or coarse the clusters should be
 
 dir.create(file.path(wd, "ADT_seurat_analysis_output", "cls_lei", "tables"), recursive = TRUE)
 
 # Have to use igraph method as default method crashes due to size of data (a weakness of leiden)
 
-res_ls <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0)
-for (res in res_ls) {
+for (res in seq(from = 0.1, to = 3.0, by = 0.1)) {
     outfile = sprintf("lei_r%03d", 100* res)
     ADT_seurat <- FindClusters(ADT_seurat, resolution = res, algorithm = 4, method = "igraph")
     #Saving leiden clustering to file for later comparison with MCL
