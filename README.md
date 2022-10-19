@@ -20,3 +20,5 @@ Script Explanations:
 `ADT-mcl-clustering.sh` - bash script that clusters ADT data with MCL and compares leiden and mcl clusterings for volatile nodes
 
 `RNA-mcl-clustering.sh` - bash script that clusters RNA data with MCL and compares leiden and mcl clusterings for volatile nodes
+
+`run_cellxgene.sh` - runs a local version of cellxgene to show the data in an interactive format
