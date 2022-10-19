@@ -18,7 +18,7 @@ rcl mcl cls_mcl -p 30 -n mcl_nn/nn.mcx -t ../RNA_seurat_analysis_output/barcode_
 mkdir -p lei_conversion
 cd lei_conversion
 # Converting leiden script requires leiden clustering to be in current working directory
-cp ../../RNA_seurat_analysis_output/cls_lei/* .
+cp ../../RNA_seurat_analysis_output/cls_lei/lei_r* .
 ## Converting leiden clustering to rcl format for comparison
 for cls in *; do 
 	srt2cls.sh $cls ../../RNA_seurat_analysis_output/barcode_files/cells.tab
@@ -32,8 +32,8 @@ mkdir -p mcl_seurat_table
 cd mcl_seurat_table
 ## Converting mcl clustering to table format to be integrated to Seurat object
 for cls in ../cls_mcl/out.nn.mcx.I*; do 
-    infl=`echo $i | cut -f 3 -d "/" | cut -f 4 -d "."`
-    mcxdump -imx $i -tabr ../../RNA_seurat_analysis_output/barcode_files/cells.tab --transpose --no-values -o "${infl}_srt_mcl.file"; 
+    infl=`echo $cls | cut -f 3 -d "/" | cut -f 4 -d "."`
+    mcxdump -imx $cls -tabr ../../RNA_seurat_analysis_output/barcode_files/cells.tab --transpose --no-values -o "${infl}_srt_mcl.file"; 
 done
 ## Converting volatility file to seurat readable format
 cd ../comparison
