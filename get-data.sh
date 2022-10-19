@@ -46,4 +46,5 @@ wget https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat
 # Removing TAR file
 rm GSE164378_RAW.tar
 
-
+# Generating curated tar file for storing data on website
+tar -czvf curated_data.tar.gz data
