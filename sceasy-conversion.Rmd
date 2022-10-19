@@ -11,12 +11,12 @@ wd <- setwd(".")
 
 ```{r}
 # Reading in RNA object written to file by integration analysis notebook
-RNA_seurat <- readRDS(paste(wd, "RNA_seurat_analysis_output/integrated_seurat", "full_seurat.rds", sep="/"))
+RNA_seurat <- readRDS(paste(wd, "integrated_output/integrated_seurat", "full_RNA_seurat.rds", sep="/"))
 ```
 
 ```{r}
 # Reading in ADT object written to file by integration analysis notebook
-ADT_seurat <- readRDS(paste(wd, "ADT_seurat_analysis_output/integrated_seurat", "full_seurat.rds", sep="/"))
+ADT_seurat <- readRDS(paste(wd, "integrated_output/integrated_seurat", "full_ADT_seurat.rds", sep="/"))
 ```
 
 ```{r}
