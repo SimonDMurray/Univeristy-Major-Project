@@ -98,16 +98,11 @@ res_ls <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4
 for (res in res_ls) {
     outfile = sprintf("lei_r%03d", 100* res)
     RNA_seurat <- FindClusters(RNA_seurat, resolution = res, algorithm = 4, method = "igraph")
+    #Saving leiden clustering to file for later comparison with MCL
     write.table(RNA_seurat@active.ident, file=paste(wd, "RNA_seurat_analysis_output/cls_lei", outfile, sep = "/"), row.names=TRUE, col.names=FALSE, sep="\t", quote = FALSE)
     RNA_seurat[[outfile]] <- RNA_seurat[["seurat_clusters"]]
     write.table(RNA_seurat@meta.data[[outfile]], file=paste(wd, "/RNA_seurat_analysis_output/cls_lei/tables/", outfile, ".table", sep = ""), row.names=FALSE, col.names=FALSE, sep="\t", quote = FALSE)
 }
-```
-
-```{r}
-#Saving leiden clustering to file for later comparison with MCL
-dir.create(file.path(wd, "RNA_seurat_analysis_output", "cls_lei"), recursive = TRUE)
-write.table(RNA_seurat@active.ident, file="RNA_seurat_analysis_output/cls_lei/lei_r08", row.names=TRUE, col.names=FALSE, sep="\t", quote = FALSE)
 ```
 
 ```{r}
